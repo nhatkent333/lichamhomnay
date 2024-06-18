@@ -21,10 +21,26 @@ def download_file(url, local_path):
 def upload_file_to_ftp(local_path, ftp_host, ftp_user, ftp_password, ftp_dir):
     with ftplib.FTP(ftp_host) as ftp:
         ftp.login(user=ftp_user, passwd=ftp_password)
-        ftp.cwd(ftp_dir)
+        
+        # List directories and check if target directory exists
+        directories = []
+        ftp.retrlines('LIST', directories.append)
+        print("Directories on the server:")
+        for directory in directories:
+            print(directory)
+        
+        try:
+            ftp.cwd(ftp_dir)
+        except ftplib.error_perm as e:
+            print(f"Error changing directory: {e}")
+            return
+        
         with open(local_path, 'rb') as file:
-            ftp.storbinary(f'STOR {Path(local_path).name}', file)
-        print(f"File uploaded to FTP directory {ftp_dir}")
+            try:
+                ftp.storbinary(f'STOR {Path(local_path).name}', file)
+                print(f"File uploaded to FTP directory {ftp_dir}")
+            except ftplib.error_perm as e:
+                print(f"Error uploading file: {e}")
 
 # Step 1: Download the file
 download_file(file_url, local_filename)
